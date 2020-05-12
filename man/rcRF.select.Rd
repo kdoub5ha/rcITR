@@ -7,11 +7,10 @@
 rcRF.select(data, split.var, test = NULL, N0 = 20, n0 = 5,
   efficacy = "y", risk = "r", col.trt = "trt", col.prtx = "prtx",
   ntree = 500, lambda.upper = NA, risk.control = TRUE,
-  risk.threshold = NA, nfolds = 10, AIPWE = FALSE, sort = TRUE,
-  ctg = NA, mtry = max(floor(length(split.var)/3), 1),
-  avoid.nul.tree = FALSE, max.depth = 15, stabilize.type = c("linear",
-  "rf"), stabilize = TRUE, verbose = FALSE, use.other.nodes = TRUE,
-  use.bootstrap = FALSE, extremeRandomized = FALSE,
+  risk.threshold = NA, AIPWE = FALSE, ctg = NA,
+  mtry = max(floor(length(split.var)/3), 1), avoid.nul.tree = FALSE,
+  max.depth = 15, stabilize.type = c("linear", "rf"), stabilize = TRUE,
+  verbose = FALSE, use.other.nodes = TRUE, extremeRandomized = FALSE,
   importance.measures = FALSE, order.importances = TRUE, max.iter = 10,
   risk.tolerance = c(0.995, 1.005))
 }
@@ -47,8 +46,6 @@ candidate splitting covariates.}
 
 \item{AIPWE}{logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet.}
 
-\item{sort}{internal use.}
-
 \item{ctg}{numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet.}
 
 \item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.}
@@ -61,8 +58,6 @@ candidate splitting covariates.}
 
 \item{use.other.nodes}{logical. Should global estimator of objective function be used. Defaults to TRUE.}
 
-\item{use.bootstrap}{logical. Should a bootstrap resampling be done? Defaults to FALSE.}
-
 \item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril.}
 
 \item{importance.measures}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
@@ -72,8 +67,6 @@ candidate splitting covariates.}
 \item{max.iter}{numeric. Indicates the maximum number of forest iterations to perform. Defaults to 10.}
 
 \item{risk.tolerance}{numeric. Two component vector giving the bound on risk that is acceptable (acceptable risk range is calcuated as risk.threshold * risk.tolerance). Defaults to c(0.995, 1.005), i.e. 0.5% tolerance.}
-
-\item{lambda.seq}{numeric vector. Identifies sequence of penalty parameters to be considered. Defaults to NA and will attempt to identify reasonable range.}
 }
 \value{
 A summary of the cross validation including optimal penalty parameter and the optimal model.
