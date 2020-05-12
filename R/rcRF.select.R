@@ -15,7 +15,6 @@
 #' @param col.prtx char. Propensity score column name. 
 #' @param risk.control logical. Should risk be controlled? Defaults to TRUE.
 #' @param risk.threshold numeric. Desired level of risk control. 
-#' @param lambda.seq numeric vector. Identifies sequence of penalty parameters to be considered. Defaults to NA and will attempt to identify reasonable range. 
 #' @param test data.frame of testing observations. Should be formatted the same as 'data'.
 #' @param N0 numeric specifying minimum number of observations required to call a node terminal. Defaults to 20.
 #' @param n0 numeric specifying minimum number of treatment/control observations needed in a split to declare a node terminal. Defaults to 5. 
@@ -23,9 +22,7 @@
 #' @param mtry numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.
 #' @param stabilize logical indicating if efficacy should be modeled using residuals. Defaults to TRUE. 
 #' @param stabilize.type character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest. 
-#' @param sort internal use.
 #' @param use.other.nodes logical. Should global estimator of objective function be used. Defaults to TRUE. 
-#' @param use.bootstrap logical. Should a bootstrap resampling be done? Defaults to FALSE.
 #' @param ctg numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet. 
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
 #' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
@@ -68,9 +65,7 @@ rcRF.select <- function(data,
                         lambda.upper = NA,
                         risk.control = TRUE, 
                         risk.threshold = NA, 
-                        nfolds = 10, 
                         AIPWE = FALSE, 
-                        sort = TRUE, 
                         ctg = NA, 
                         mtry = max(floor(length(split.var)/3), 1),
                         avoid.nul.tree = FALSE, 
@@ -79,7 +74,6 @@ rcRF.select <- function(data,
                         stabilize = TRUE, 
                         verbose = FALSE, 
                         use.other.nodes = TRUE, 
-                        use.bootstrap = FALSE,
                         extremeRandomized = FALSE, 
                         importance.measures = FALSE, 
                         order.importances = TRUE,
