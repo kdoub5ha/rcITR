@@ -202,8 +202,7 @@ rcRF.select <- function(data,
   best.lambda <- lambdas[best.idx]
   best.risk <- risks[best.idx]
   end.time <- Sys.time()
-  browser()
-  
+
   if(importance.measures){
     importances <- Variable.Importance.ITR(RF.fit = best.fit, sort = order.importances)
   } else{
