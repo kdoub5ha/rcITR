@@ -4,7 +4,7 @@
 \alias{predict.ITR}
 \title{Treatment Prediction for rcDT and rcRF Models}
 \usage{
-\method{predict}{ITR}(fit, new.data, split.var, ctgs = NULL)
+predict.ITR(fit, new.data, split.var, ctgs = NULL)
 }
 \arguments{
 \item{fit}{tree or forest object from `grow.ITR` or `Build.RF.ITR`.}

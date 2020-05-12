@@ -4,16 +4,17 @@
 \alias{rcRF}
 \title{Builds an rcRF model for risk controlled optimization}
 \usage{
-rcRF(dat, split.var, efficacy = "y", risk = "r", col.trt = "trt",
+rcRF(data, split.var, efficacy = "y", risk = "r", col.trt = "trt",
   col.prtx = "prtx", risk.control = TRUE, risk.threshold = NA,
   lambda = 0, stabilize = TRUE, stabilize.type = c("linear", "rf"),
   test = NULL, ctg = NULL, N0 = 20, n0 = 5, max.depth = 10,
   ntree = 500, mtry = max(floor(length(split.var)/3), 1),
   avoid.nul.tree = FALSE, AIPWE = FALSE, verbose = FALSE,
-  use.other.nodes = TRUE, extremeRandomized = FALSE)
+  use.other.nodes = TRUE, extremeRandomized = FALSE,
+  importance.measures = FALSE, order.importances = TRUE)
 }
 \arguments{
-\item{dat}{data.frame. Data used to construct rcRF model.
+\item{data}{data.frame. Data used to construct rcRF model.
 Must contain efficacy variable (y), 
 risk variable (r), 
 binary treatment indicator coded as 0 / 1 (trt), 
@@ -63,6 +64,10 @@ Optional arguments}
 \item{use.other.nodes}{logical. Should global estimator of objective function be used. Defaults to TRUE.}
 
 \item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril.}
+
+\item{importance.measures}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
+
+\item{order.importances}{logical. Should importances be ordered (if requested)?}
 
 \item{col.ptrx}{char. Propensity score column name.}
 }

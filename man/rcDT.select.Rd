@@ -2,17 +2,18 @@
 % Please edit documentation in R/rcDT.select.R
 \name{rcDT.select}
 \alias{rcDT.select}
-\title{Cross Validation for Optimal rcDT Model Selection for Given Penalty (lambda)}
+\title{Cross Validation for Optimal rcDT Model Selection}
 \usage{
-rcDT.select(dat, split.var, N0 = 20, n0 = 5, efficacy = "y", risk = "r",
-  col.trt = "trt", col.prtx = "prtx", lambda = 0, risk.control = TRUE,
-  risk.threshold = NA, nfolds = 10, AIPWE = FALSE, sort = TRUE,
-  ctg = NA, max.depth = 15, stabilize.type = c("linear", "rf"),
-  stabilize = TRUE, use.other.nodes = TRUE, use.bootstrap = FALSE,
+rcDT.select(data, split.var, N0 = 20, n0 = 5, efficacy = "y",
+  risk = "r", col.trt = "trt", col.prtx = "prtx", lambda.seq = NA,
+  lambda.length = 50, risk.control = TRUE, risk.threshold = NA,
+  nfolds = 10, AIPWE = FALSE, sort = TRUE, ctg = NA,
+  mtry = length(split.var), max.depth = 15, stabilize.type = c("linear",
+  "rf"), stabilize = TRUE, use.other.nodes = TRUE, use.bootstrap = FALSE,
   extremeRandomized = FALSE)
 }
 \arguments{
-\item{dat}{data.frame. Data used to construct rcDT model.
+\item{data}{data.frame. Data used to construct rcDT model.
 Must contain efficacy variable (y), 
 risk variable (r), 
 binary treatment indicator coded as 0 / 1 (trt), 
@@ -33,7 +34,7 @@ candidate splitting covariates.}
 
 \item{col.prtx}{char. Propensity score column name.}
 
-\item{lambda}{numeric. Penalty parameter for risk scores. Defaults to 0, i.e. no constraint.}
+\item{lambda.seq}{numeric vector. Identifies sequence of penalty parameters to be considered. Defaults to NA and will attempt to identify reasonable range.}
 
 \item{risk.control}{logical. Should risk be controlled? Defaults to TRUE.}
 
@@ -44,6 +45,8 @@ candidate splitting covariates.}
 \item{sort}{internal use.}
 
 \item{ctg}{numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet.}
+
+\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.}
 
 \item{max.depth}{numeric specifying maximum depth of the tree. Defaults to 15 levels.}
 
@@ -58,25 +61,21 @@ candidate splitting covariates.}
 \item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. #' @return A summary of the cross validation including optimal penalty parameter and the optimal model.}
 
 \item{test}{data.frame of testing observations. Should be formatted the same as 'data'.}
-
-\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.}
 }
 \value{
-\item{best.tree.size}{optimal rcDT model based on size}
+\item{best.tree}{optimal rcDT model}
 
-\item{best.tree.alpha}{optimal rcDT model based on alpha parameter selection}
+\item{alpha}{tree size penalty}
 
-\item{best.alpha}{optimal lambda parameter selected from the cross validation procedure}
+\item{lambda}{risk penalty}
 
 \item{full.tree}{unpruned tree}
 
 \item{pruned.tree}{output from pruning of `full.tree`}
 
-\item{data}{input data}
+\item{subtrees}{sequence of optimally pruned subtrees}
 
-\item{details}{summary of model performance}
-
-\item{subtrees}{sequence of optimally pruned subtrees of `full.tree`}
+\item{best.tree.summaries}{summary across trees}
 
 \item{in.train}{training samples from splits}
 
