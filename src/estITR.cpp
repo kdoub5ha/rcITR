@@ -33,20 +33,25 @@ double estITR(List input) {
     check3 += 1-trt[i];
   }
   
-  double itrOut1 = 0;
+  double itrOutY1 = 0;
+  double itrOutY2 = 0;
+  double itrOutR1 = 0;
   
   if((check1 >= n0) && (check2 >= n0) && (check3 >= n0)){
     for(int i = 0; i < y.length(); i++){
-      itrOut1 += (y[i] - lambda * ae[i]) * (((trt[i] * z[i] * status[i]) / (prtx[i] * kmCens[i])) + 
-        (((1-trt[i]) * (1-z[i]) * status[i]) / ((1-prtx[i]) * kmCens[i]))) / y.length();
+      itrOutY1 += (y[i]) * (((trt[i] * z[i] * status[i]) / (prtx[i] * kmCens[i])) + 
+        (((1-trt[i]) * (1-z[i]) * status[i]) / ((1-prtx[i]) * kmCens[i])));
+      itrOutY2 += (((trt[i] * z[i] * status[i]) / (prtx[i] * kmCens[i])) + 
+        (((1-trt[i]) * (1-z[i]) * status[i]) / ((1-prtx[i]) * kmCens[i])));
+      itrOutR1 += (ae[i]) * (((trt[i] * z[i] * status[i]) / (prtx[i] * kmCens[i])) + 
+        (((1-trt[i]) * (1-z[i]) * status[i]) / ((1-prtx[i]) * kmCens[i])));
     }
   } else{
-    itrOut1 = -1E10;
+    itrOutY1 = -1E10;
+    itrOutY2 = 1;
+    itrOutR1 = 1;
   }
   
-  // double output(1);
-  // output = itrOut1;
-  
   // Return ITR
-  return itrOut1 + lambda * maxRisk;
+  return (itrOutY1 / itrOutY2) - lambda * (itrOutR1 / itrOutY2 - maxRisk);
 }
