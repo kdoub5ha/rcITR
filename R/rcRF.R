@@ -5,7 +5,7 @@
 #' obtain treatment predictions. An output from this function can also be given to the `Variable.Importance.ITR()` 
 #' function to estimate predictor importance. 
 #' 
-#' @param dat data.frame. Data used to construct rcRF model.  
+#' @param data data.frame. Data used to construct rcRF model.  
 #' Must contain efficacy variable (y), 
 #' risk variable (r), 
 #' binary treatment indicator coded as 0 / 1 (trt), 
@@ -35,6 +35,8 @@
 #' @param verbose logical. Give updates about forest progression?
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
 #' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
+#' @param order.importances logical. Should importances be ordered (if requested)?
+#' @param importance.measures logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.
 #' @return A list of characteristics of the forest.
 #' @return \item{ID.Boots.Samples}{list of bootstrap sample IDs}
 #' @return \item{TREES}{list of trees}
@@ -51,7 +53,7 @@
 #'             lambda = 1)
 
 
-rcRF <- function(dat, 
+rcRF <- function(data, 
                  split.var, 
                  efficacy = "y",
                  risk = "r",
@@ -73,16 +75,43 @@ rcRF <- function(dat,
                  AIPWE = FALSE, 
                  verbose = FALSE, 
                  use.other.nodes = TRUE, 
-                 extremeRandomized = FALSE)
+                 extremeRandomized = FALSE, 
+                 importance.measures = FALSE, 
+                 order.importances = TRUE)
 {
+  
   require(randomForest)
+  
+  # input checks
+  if(!is.data.frame(data)) stop("data argument must be dataframe")
+  if(!is.numeric(split.var)) stop("split.var must be numeric vector")
+  
+  if(!is.character(efficacy)) stop("efficacy argument must be character")
+  if(!efficacy %in% colnames(data)) stop("efficacy argument is not in data")
+  if(!is.character(risk)) stop("risk argument must be character")
+  if(!risk %in% colnames(data)) stop("risk argument is not in data")
+  
+  if(risk.control & is.na(risk.threshold)) warning("risk.contrl is TRUE, but risk.threshold not specified")
+  if(!any(stabilize.type %in% c("linear", "rf"))) stop("linear and rf values supported for stabilize.type")
+  if(mtry > length(split.var)){
+    warning("mtry is larger than split.var length -- setting mtry to length(split.var)")
+    mtry <- length(split.var)
+  }
+  
+  stabilize.type <- match.arg(stabilize.type)
+  
+  if(sum(data$trt %in% c(0,1)) != nrow(data)){
+    data$trt <- ifelse(data$trt == -1, 0, 1)
+    message("Assuming trt indicator is of form -1/+1 and changed values to 0/1")
+  }
+  
   out <- as.list(NULL)
   out$ID.Boots.Samples  <- as.list(1:ntree)
   out$TREES <- as.list(1:ntree)
-  out$preds.oob <- matrix(NA, nrow = nrow(dat), ncol = ntree)
-  out$preds.inbag <- matrix(NA, nrow = nrow(dat), ncol = ntree)
-  out$preds.cumulative.oob <- matrix(NA, nrow = nrow(dat), ncol = ntree)
-  out$preds.cumulative.inbag <- matrix(NA, nrow = nrow(dat), ncol = ntree)
+  out$preds.oob <- matrix(NA, nrow = nrow(data), ncol = ntree)
+  out$preds.inbag <- matrix(NA, nrow = nrow(data), ncol = ntree)
+  out$preds.cumulative.oob <- matrix(NA, nrow = nrow(data), ncol = ntree)
+  out$preds.cumulative.inbag <- matrix(NA, nrow = nrow(data), ncol = ntree)
   out$value.oob <- rep(NA, ntree)
   out$value.inbag <- rep(NA, ntree)
   out$risk.oob <- rep(NA, ntree)
@@ -107,9 +136,9 @@ rcRF <- function(dat,
   b <- 1
   while(b <= ntree){
     # TAKE BOOTSTRAP SAMPLES
-    id.b <- sample(1:nrow(dat), size=nrow(dat), replace = TRUE)
-    dat.b <- dat[id.b,]
-    dat.test <- dat[-unique(id.b),]
+    id.b <- sample(1:nrow(data), size=nrow(data), replace = TRUE)
+    dat.b <- data[id.b,]
+    dat.test <- data[-unique(id.b),]
     
     # Generate tree based on b-th bootstrap sample
     tre.b <- rcDT(data = dat.b, 
@@ -143,8 +172,8 @@ rcRF <- function(dat,
       out$ID.Boots.Samples[[b]] <- id.b
       out$TREES[[b]] <- tre.b$tree
       if(nrow(tre.b$tree) > 1){
-        preds <- predict.ITR(tre.b$tree, dat, split.var)$trt.pred
-        inbag.idx <- seq_along(1:nrow(dat)) %in% unique(id.b)
+        preds <- predict.ITR(tre.b$tree, data, split.var)$trt.pred
+        inbag.idx <- seq_along(1:nrow(data)) %in% unique(id.b)
         out$preds.oob[,b] <- ifelse(inbag.idx, NA, preds)
         out$preds.inbag[,b] <- ifelse(inbag.idx, preds, NA)
       }
@@ -152,10 +181,14 @@ rcRF <- function(dat,
       out$preds.cumulative.inbag[,b] <- ifelse(rowMeans(out$preds.inbag[,1:b,drop=F], na.rm = T) > 0.5, 1, 0)
       
       if(b > 5){
-        out$value.inbag[b] <- mean(dat[,efficacy] * (out$preds.cumulative.inbag[,b] == dat[,col.trt]) / dat[,col.prtx], na.rm = T)
-        out$value.oob[b] <- mean(dat[,efficacy] * (out$preds.cumulative.oob[,b] == dat[,col.trt]) / dat[,col.prtx], na.rm = T)
-        out$risk.inbag[b] <- mean(dat[,risk] * (out$preds.cumulative.inbag[,b] == dat[,col.trt]) / dat[,col.prtx], na.rm = T)
-        out$risk.oob[b] <- mean(dat[,risk] * (out$preds.cumulative.oob[,b] == dat[,col.trt]) / dat[,col.prtx], na.rm = T)
+        out$value.inbag[b] <- sum(data[,efficacy] * (out$preds.cumulative.inbag[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T) / 
+          sum((out$preds.cumulative.inbag[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T)
+        out$value.oob[b] <- sum(data[,efficacy] * (out$preds.cumulative.oob[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T) / 
+          sum((out$preds.cumulative.oob[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T)
+        out$risk.inbag[b] <- sum(data[,risk] * (out$preds.cumulative.inbag[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T) / 
+          sum((out$preds.cumulative.inbag[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T)
+        out$risk.oob[b] <- sum(data[,risk] * (out$preds.cumulative.oob[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T) / 
+          sum((out$preds.cumulative.oob[,b] == data[,col.trt]) / data[,col.prtx], na.rm = T)
       }
       
       if(!is.null(test)){
@@ -164,8 +197,10 @@ rcRF <- function(dat,
         }
         if(b > 5){
           out$test.preds.cumulative[,b] <- ifelse(rowMeans(out$test.preds[,1:b,drop=F], na.rm = T) > 0.5, 1, 0)
-          out$test.value[b] <- mean(test[,efficacy] * (out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T)
-          out$test.risk[b] <- mean(test[risk] * (out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T)
+          out$test.value[b] <- sum(test[,efficacy] * (out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T) / 
+            sum((out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T)
+          out$test.risk[b] <- sum(test[risk] * (out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T) / 
+            sum((out$test.preds.cumulative[,b] == test[,col.trt]) / test[,col.prtx], na.rm = T)
         }
       }
       
@@ -177,7 +212,7 @@ rcRF <- function(dat,
   }
   
   Model.Specification <- as.list(NULL)
-  Model.Specification$data <- dat
+  Model.Specification$data <- data
   Model.Specification$split.var <- split.var
   Model.Specification$ctg <- ctg
   Model.Specification$efficacy <- efficacy
@@ -187,5 +222,10 @@ rcRF <- function(dat,
   Model.Specification$lambda <- lambda
   Model.Specification$risk.threshold <- risk.threshold
   out$Model.Specification <- Model.Specification
+  
+  if(importance.measures){
+    importances <- Variable.Importance.ITR(out, sort = order.importances)
+    out$importances <- importances
+  }
   return(out)
 }

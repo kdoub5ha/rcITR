@@ -58,6 +58,7 @@ prune <- function(tre,
     internal <- tre.in$node[!is.na(tre.in$cut.1)]
     l <- length(internal)
     preds.tre.in <- predict.ITR(tre.in, train, tre$split.var)$trt.pred
+    
     L.tre.in <- estITR(list(y = train$y,
                             trt = train$trt, 
                             ae = train$r,
@@ -80,8 +81,10 @@ prune <- function(tre,
         
         if(nrow(tmp) > 1){
           trt.pred <- predict.ITR(tmp, train, tre$split.var, ctgs = ctgs)$trt.pred
-          ae.score <- mean(train$r * (train$trt == trt.pred) / train$prtx)
-          y.score <- mean(train$y * (train$trt == trt.pred) / train$prtx)
+          ae.score <- sum(train$r * (train$trt == trt.pred) / train$prtx) / 
+            sum((train$trt == trt.pred) / train$prtx)
+          y.score <- sum(train$y * (train$trt == trt.pred) / train$prtx) / 
+            sum((train$trt == trt.pred) / train$prtx)
           score <- estITR(list(y = train$y, 
                                trt = train$trt,
                                ae = train$r,
@@ -106,15 +109,17 @@ prune <- function(tre,
                         z = rep(iii, nrow(train)))))
           idx.scores <- which.max(scores)
           score <- scores[idx.scores]
-          ae.score <- mean(train$r * (train$trt == rep(idx.scores-1, nrow(train))) / train$prtx)
-          y.score <- mean(train$y * (train$trt == rep(idx.scores-1, nrow(train))) / train$prtx)
+          ae.score <- sum(train$r * (train$trt == rep(idx.scores-1, nrow(train))) / train$prtx) / 
+            sum((train$trt == rep(idx.scores-1, nrow(train))) / train$prtx)
+          y.score <- sum(train$y * (train$trt == rep(idx.scores-1, nrow(train))) / train$prtx) / 
+            sum((train$trt == rep(idx.scores-1, nrow(train))) / train$prtx)
         }
         
         if(!risk.control){
           return(score / sum(!is.na(tmp$var)))
         } else{
           # return(c(y = score / sum(!is.na(tmp)), r = ae.score))
-          return(c(y = score,
+          return(c(y = (L.tre.in - score) / (sum(is.na(tre.in$var)) - sum(is.na(tmp$var))),
                    y.diff = L.tre.in - score,
                    y.score = y.score,
                    r.score = ae.score))
@@ -125,7 +130,7 @@ prune <- function(tre,
       if(!risk.control){
         alpha <- max(r.value, na.rm = TRUE)
       } else{
-        alpha <- max(r.value["y",], na.rm = TRUE)
+        alpha <- min(r.value["y",], na.rm = TRUE)
         r.value <- as.numeric(r.value["y",])
       }
     } else{
@@ -144,9 +149,9 @@ prune <- function(tre,
             alpha <- tmp.alpha["y"]
           } else{
             if(nrow(tmp.alpha) > 1){
-              alpha <- data.frame(tmp.alpha)[which.max(as.numeric(tmp.alpha[,"y"])),"y"]
+              alpha <- data.frame(tmp.alpha)[which.min(as.numeric(tmp.alpha[,"y"])),"y"]
             } else{
-              alpha <- data.frame(tmp.alpha)[which.max(as.numeric(tmp.alpha[,"y"])),"y"]
+              alpha <- data.frame(tmp.alpha)[which.min(as.numeric(tmp.alpha[,"y"])),"y"]
             }
           }
         } else{
@@ -156,11 +161,11 @@ prune <- function(tre,
       }
     }
     
-    nod.rm <- sample(internal[r.value == alpha], 1)
+    nod.rm <- internal[r.value == alpha]
     trt.pred <- preds.tre.in
     
     V <- L.tre.in
-    V.a <- V - a*sum(!is.na(tre.in$score))
+    V.a <- V - a*sum(is.na(tre.in$score))
     
     if(!is.null(test)){
       # Calculate value for the training set
@@ -180,7 +185,7 @@ prune <- function(tre,
       #                          prtx = test$prtx, status = rep(1, nrow(test)), 
       #                          KM.cens = rep(1, nrow(test)), n0 = 0, z = trt.pred))
       # tmp.v.ae.test <- c(tmp.v.ae.test, V.ae.test)
-      Va.test <- V.test - a*sum(!is.na(tre.in$score))
+      Va.test <- V.test - a*sum(is.na(tre.in$score))
     }
     
     # Calculate value for testing data
@@ -302,10 +307,14 @@ prune <- function(tre,
   pr <- lapply(out$subtrees, function(i){
     predict.ITR(i, train, tre$split.var)$trt.pred
   })
-  benefits <- do.call(c, lapply(pr, function(i) mean(train$y * (train$trt == i) / train$prtx)))
-  base.benefit <- mean(train$y * (train$trt == 0) / train$prtx)
-  risks <- do.call(c, lapply(pr, function(i) mean(train$r * (train$trt == i) / train$prtx))) 
-  base.risk <- mean(train$r * (train$trt == 0) / train$prtx)
+  benefits <- do.call(c, lapply(pr, function(i){
+    sum(train$y * (train$trt == i) / train$prtx) / sum((train$trt == i) / train$prtx)
+  }))
+  base.benefit <- sum(train$y * (train$trt == 0) / train$prtx) / sum((train$trt == 0) / train$prtx)
+  risks <- do.call(c, lapply(pr, function(i){
+    sum(train$r * (train$trt == i) / train$prtx) / sum((train$trt == i) / train$prtx)
+  }))  
+  base.risk <- sum(train$r * (train$trt == 0) / train$prtx) / sum((train$trt == 0) / train$prtx)
   out$result <- cbind.data.frame(out$result, 
                                  Benefit = c(benefits, base.benefit), 
                                  Risk = c(risks, base.risk))

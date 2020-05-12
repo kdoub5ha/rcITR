@@ -184,9 +184,9 @@ Variable.Importance.ITR <- function(RF.fit,
         if (G.j.Efficacy > G.oob.Efficacy) G.j.Efficacy <- G.oob.Efficacy
         if (G.j.Risk < G.oob.Risk) G.j.Risk <- G.oob.Risk
         ##################### PREVENTS NEGATIVE IMPORTANCE VALUES 
-        VI[j] <- VI[j] + (G.oob.Total - G.j.Total)/G.oob.Total
-        VI.Efficacy[j] <- VI.Efficacy[j] + (G.oob.Efficacy - G.j.Efficacy)/G.oob.Efficacy
-        VI.Risk[j] <- VI.Risk[j] + (G.j.Risk - G.oob.Risk)/G.oob.Risk
+        VI[j] <- VI[j] + abs((G.oob.Total - G.j.Total)/G.oob.Total)
+        VI.Efficacy[j] <- VI.Efficacy[j] + abs((G.oob.Efficacy - G.j.Efficacy)/G.oob.Efficacy)
+        VI.Risk[j] <- VI.Risk[j] + abs((G.j.Risk - G.oob.Risk)/G.oob.Risk)
       }
     }	
   }
