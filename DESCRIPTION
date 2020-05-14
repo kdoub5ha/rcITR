@@ -13,4 +13,4 @@ Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 NeedsCompilation: yes
-Packaged: 2020-05-14 05:15:57 UTC; Elite-Intel
+Packaged: 2020-05-14 05:52:34 UTC; Elite-Intel

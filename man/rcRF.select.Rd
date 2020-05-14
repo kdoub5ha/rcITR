@@ -96,7 +96,7 @@ A summary of the cross validation including optimal penalty parameter and the op
 }
 \description{
 Performs model selection for rcRF model to 
-select the best penalty parameter ($\lambda$).
+select the best penalty parameter.
 }
 \examples{
 

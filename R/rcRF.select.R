@@ -1,6 +1,6 @@
 #' @title rcRF model selection
 #' @description Performs model selection for rcRF model to 
-#' select the best penalty parameter ($\lambda$).
+#' select the best penalty parameter.
 #' @param data data.frame. Data used to construct rcDT model.  
 #' Must contain efficacy variable (y), 
 #' risk variable (r), 
