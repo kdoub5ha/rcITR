@@ -1,11 +1,11 @@
-#' @title Finds all decendants of a particular node in a tree.   
+#' @title Node descendant identifier
 #' 
-#' @description This function identifies all nodes in a given tree structure
+#' @description Identifies all nodes in a given tree structure
 #' which are descendants of the input node. 
 #' 
-#' @param x node 
-#' @param tree interaction tree 
-#' @return Returns all the descendant nodes from the node `x`
+#' @param x character indicating node 
+#' @param tree tree structure generated from rcDT()
+#' @return Returns all the descendant nodes from the node `x` as a character string
 #' @export
 
 

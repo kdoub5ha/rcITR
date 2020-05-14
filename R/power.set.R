@@ -1,4 +1,4 @@
-#' @title Categorical predictor subsetting in the tree growing function. 
+#' @title Power set construction
 #' 
 #' @description Finds unique combinations of categorical, non-ordinal variables. 
 #' @param x a categorical predictor. 

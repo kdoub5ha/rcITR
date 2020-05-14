@@ -1,6 +1,6 @@
-#' @title Generates partition summary based on itr value. 
+#' @title Determines optimal partition. 
 #' 
-#' @description Determines optimal split for a given node. 
+#' @description Determines optimal partition for an input node in an rcDT model. 
 #' 
 #' @param dat data.frame. Data used to identify split.  
 #' @param split.var numeric vector. Columns of spliting variables.
@@ -17,7 +17,8 @@
 #' @param use.other.nodes logical. Should global estimator of objective function be used. Defaults to TRUE. 
 #' @param ctg numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet. 
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
-#' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to #' @return summary of the best split for a given data frame. 
+#' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE
+#' @return summary of the best split for a given data frame. 
 #' @export
 
 risk.partition.ITR <- function(dat, 

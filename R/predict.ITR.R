@@ -1,14 +1,14 @@
-#' @title Treatment Prediction for rcDT and rcRF Models
+#' @title Treatment prediction for rcDT and rcRF models
 #'
-#' @description Used to make treatment prediction for a rcDT and rcRF models. If the 
+#' @description Returns treatment predictions for a rcDT and rcRF models given a new data set. If the 
 #' input is rcRF (forest), then the proportion of trees voting for treatment (`trt=1`) is returned. 
 #' If the input is rcDT (single tree), then the function returns the vote (0 / 1) for the model. 
 #' 
-#' @param fit tree or forest object from `grow.ITR` or `Build.RF.ITR`.
-#' @param new.data data for which predictions are desired
-#' @param split.var splitting variables from the model fit
-#' @param ctgs columns of categorical variables. 
-#' @return A summary list of the following elements:
+#' @param fit tree or forest object from `rcDT` or `rcRF`.
+#' @param new.data data.frame of new observations
+#' @param split.var numeric vector indicating columns of covariates
+#' @param ctgs numeric vector of columns of categorical covariates. 
+#' @return A list of prediction summaries
 #' @return \item{SummaryTreat}{proportion of trees voting for treatment (trt=1). 
 #' If input is rcDT (single tree) then SummaryTreat is a single number. 
 #' If input is rcRF (forest) then SummaryTreat is a vector equal to the length of the number of trees.}
@@ -17,24 +17,26 @@
 #' @return \item{tree.votes}{matrix of votes for each tree for each subject in `new.data`. Rows correspond to trees in `fit` and columns correspond to subjects in `new.dat`.}
 #' @return \item{data}{input data frame `new.data`}
 #' @return \item{NA.trees}{number of trees returning no votes. In a forest, this is the number of null trees.}
-#' @import randomForest
 #' @export
 #' @examples
 #' # Generate simulated data
 #' set.seed(123)
-#' dat <- generateData(n = 1000)
+#' dat <- generateData()
 #' 
 #' # Generates rcDT using simualated data with splitting variables located in columns 1-10.
-#' rcDT.fit <- rcDT(data = dat, split.var = 1:10, 
-#'                  risk.control = TRUE, risk.threshold = 2.75, 
+#' rcDT.fit <- rcDT(data = dat, 
+#'                  split.var = 1:10, 
+#'                  risk.threshold = 2.75, 
 #'                  lambda = 1)
 #' # Predict treatment assignments for 1000 observations in `dat` using the rcDT model
 #' preds.rcDT <- predict.ITR(fit = rcDT.fit, new.data = dat, split.var = 1:10)
 #' 
 #' # Generates rcRF using simualated data with splitting variables located in columns 1-10.
 #' set.seed(2)
-#' rcRF.fit <- rcRF(dat = dat, split.var = 1:10, ntree = 200,
-#'                  risk.control = TRUE, risk.threshold = 2.75, 
+#' rcRF.fit <- rcRF(data = dat, 
+#'                  split.var = 1:10, 
+#'                  ntree = 200,
+#'                  risk.threshold = 2.75, 
 #'                  lambda = 1)
 #' # Predict treatment assignments for 1000 observations in `dat` using the rcRF model
 #' preds.rcRF <- predict.ITR(fit = rcRF.fit, new.data = dat, split.var = 1:10)

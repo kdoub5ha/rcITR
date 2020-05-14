@@ -2,23 +2,19 @@
 % Please edit documentation in R/generateData.R
 \name{generateData}
 \alias{generateData}
-\title{Generates example data}
+\title{Example data for rcITR package demonstration}
 \usage{
 generateData(n = 1000)
 }
 \arguments{
-\item{n}{numeric. Number of example samples to be generated.}
+\item{n}{numeric. Number of example samples to be generated. Defaults to 1000.}
 }
 \value{
-Summary of a single interaction tree. Each `node` begins with "0" indicating the root node, 
-followed by a "1" or "2" indicating the less than (or left) child node or greater than (or right) child node. 
-Additionally, the number of observations `size`, number treated `n.1`, number on control `n.0`, and treatment effect `trt.effect`
-summaries are provided.  The splitting information includes the column of the chosen splitting variable `var`, the variable name 'vname',
-the direction the treatment is sent `cut.1` ("r" for right child node, and "l" for left), the chosen split value `cut.2`, 
-and the estimated value function `score`.
+data.frame with 10 covariates (x1-x10), efficacy (y), risk (r), 
+        treatment indicator (trt), and propensity score (prtx).
 }
 \description{
-Generates n example data samples for constructing and rcDT model.
+Generates data for demonstration of rcDT and rcRF model construction.
 }
 \examples{
 dat <- generateData()

@@ -1,9 +1,6 @@
-#' @title Builds an rcRF model for risk controlled optimization
+#' @title Constructs rcRF model
 #' 
-#' @description This function constructs a random forest of rcDT trees method. 
-#' A forest object can be an argument into `predict.ITR()` along with data in order to 
-#' obtain treatment predictions. An output from this function can also be given to the `Variable.Importance.ITR()` 
-#' function to estimate predictor importance. 
+#' @description Constructs a risk controlled random forest (rcRF) composed of rcDT predictors. 
 #' 
 #' @param data data.frame. Data used to construct rcRF model.  
 #' Must contain efficacy variable (y), 
@@ -25,19 +22,21 @@
 #' @param N0 numeric specifying minimum number of observations required to call a node terminal. Defaults to 20.
 #' @param n0 numeric specifying minimum number of treatment/control observations needed in a split to declare a node terminal. Defaults to 5. 
 #' @param max.depth numeric specifying maximum depth of the tree. Defaults to 15 levels. 
-#' @param mtry numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.
+#' @param mtry numeric specifying the number of randomly selected splitting variables to be included. 
+#' Defaults to larger of 1 and length(split.var)/3.
 #' @param ntree numeric. Number of trees generated. Defaults to 500.
 #' @param stabilize logical indicating if efficacy should be modeled using residuals. Defaults to TRUE. 
-#' @param stabilize.type character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest. 
+#' @param stabilize.type character specifying method used for estimating residuals. 
+#' Current options are 'linear' for linear model (default) and 'rf' for random forest. 
 #' @param use.other.nodes logical. Should global estimator of objective function be used. Defaults to TRUE. 
 #' @param ctg numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet. 
 #' @param avoid.nul.tree logical. Should null trees be discarded?
 #' @param verbose logical. Give updates about forest progression?
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
 #' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
+#' @param importance logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.
 #' @param order.importances logical. Should importances be ordered (if requested)?
-#' @param importance.measures logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.
-#' @return A list of characteristics of the forest.
+#' @return List of rcRF outputs
 #' @return \item{ID.Boots.Samples}{list of bootstrap sample IDs}
 #' @return \item{TREES}{list of trees}
 #' @return \item{Model.Specification}{information about the input parameters of the forest}
@@ -46,11 +45,14 @@
 #' @export
 #' @examples
 #' set.seed(123)
-#' dat <- generateData(n = 500)
+#' dat <- generateData()
 #' # Generates rcRF model using simualated data with splitting variables located in columns 1-10.
-#' fit <- rcRF(dat = dat, split.var = 1:10, ntree = 200,
-#'             risk.control = TRUE, risk.threshold = 2.75, 
+#' fit <- rcRF(data = dat, 
+#'             split.var = 1:10, 
+#'             ntree = 200,
+#'             risk.threshold = 2.75, 
 #'             lambda = 1)
+#'             
 
 
 rcRF <- function(data, 
@@ -76,7 +78,7 @@ rcRF <- function(data,
                  verbose = FALSE, 
                  use.other.nodes = TRUE, 
                  extremeRandomized = FALSE, 
-                 importance.measures = FALSE, 
+                 importance = FALSE, 
                  order.importances = TRUE)
 {
   
@@ -223,8 +225,8 @@ rcRF <- function(data,
   Model.Specification$risk.threshold <- risk.threshold
   out$Model.Specification <- Model.Specification
   
-  if(importance.measures){
-    importances <- Variable.Importance.ITR(out, sort = order.importances)
+  if(importance){
+    importances <- Variable.Importance.ITR(rcRF.fit = out, sort = order.importances)
     out$importances <- importances
   }
   return(out)

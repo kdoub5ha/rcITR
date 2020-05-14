@@ -2,7 +2,7 @@
 % Please edit documentation in R/risk.partition.ITR.R
 \name{risk.partition.ITR}
 \alias{risk.partition.ITR}
-\title{Generates partition summary based on itr value.}
+\title{Determines optimal partition.}
 \usage{
 risk.partition.ITR(dat, split.var, test = NULL, risk.threshold = NA,
   min.ndsz = 20, n0 = 5, lambda = 0, name = "0", ctg = ctg,
@@ -41,8 +41,11 @@ risk.partition.ITR(dat, split.var, test = NULL, risk.threshold = NA,
 
 \item{use.other.nodes}{logical. Should global estimator of objective function be used. Defaults to TRUE.}
 
-\item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to #' @return summary of the best split for a given data frame.}
+\item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE}
+}
+\value{
+summary of the best split for a given data frame.
 }
 \description{
-Determines optimal split for a given node.
+Determines optimal partition for an input node in an rcDT model.
 }

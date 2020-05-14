@@ -1,13 +1,12 @@
-#' @title Cross Validation for Optimal rcDT Model Selection
-#' @description Performs k-fold cross validation for rcDT model to 
-#' select the best subtree from the set of optimally pruned subtree generated from 
-#' `prune` function. 
+#' @title Optimal rcDT model selection
+#' @description Performs k-fold cross validation for tuning of risk and tree size 
+#' paramters to select the optimal rcDT model.
 #' @param data data.frame. Data used to construct rcDT model.  
 #' Must contain efficacy variable (y), 
 #' risk variable (r), 
 #' binary treatment indicator coded as 0 / 1 (trt), 
 #' propensity score (prtx),
-#' candidate splitting covariates.
+#' candidate splitting covariates (split.var).
 #' @param split.var numeric vector. Columns of spliting variables.
 #' @param efficacy char. Efficacy outcome column. Defaults to 'y'.
 #' @param risk char. Risk outcome column. Defaults to 'r'.
@@ -15,7 +14,11 @@
 #' @param col.prtx char. Propensity score column name. 
 #' @param risk.control logical. Should risk be controlled? Defaults to TRUE.
 #' @param risk.threshold numeric. Desired level of risk control. 
-#' @param lambda.seq numeric vector. Identifies sequence of penalty parameters to be considered. Defaults to NA and will attempt to identify reasonable range. 
+#' @param lambda.seq numeric vector. Identifies sequence of risk penalty parameters to be considered. 
+#' Defaults to NA and will attempt to identify reasonable range. 
+#' @param lambda.length numeric indicating number of risk penalty parameters to use in tuning. 
+#' Larger values will cause model selection to be slower. Defaults to 50.
+#' @param n.folds numeric. Number of folds to use in k-fold cross validation. Defaults to 10.
 #' @param test data.frame of testing observations. Should be formatted the same as 'data'.
 #' @param N0 numeric specifying minimum number of observations required to call a node terminal. Defaults to 20.
 #' @param n0 numeric specifying minimum number of treatment/control observations needed in a split to declare a node terminal. Defaults to 5. 
@@ -28,7 +31,9 @@
 #' @param use.bootstrap logical. Should a bootstrap resampling be done? Defaults to FALSE.
 #' @param ctg numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet. 
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
-#' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. #' @return A summary of the cross validation including optimal penalty parameter and the optimal model. 
+#' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
+#' @param verbose logical. Should tuning progress bar be displayed. Defaults to TRUE.
+#' @return A summary of the cross validation including optimal penalty parameter and the optimal model. 
 #' @return \item{best.tree}{optimal rcDT model}
 #' @return \item{alpha}{tree size penalty}
 #' @return \item{lambda}{risk penalty}
@@ -38,15 +43,19 @@
 #' @return \item{best.tree.summaries}{summary across trees}
 #' @return \item{in.train}{training samples from splits}
 #' @return \item{in.test}{testing samples from splits}
+#' @return \item{elapsed.time}{time elapsed during model tuning}
 #' @import randomForest
+#' @import pbapply
 #' @export
 #' @examples
 #' 
 #' # Grow large tree
-#' set.seed(1)
+#' set.seed(123)
 #' dat <- generateData()
-#' fit <- rcDT.select(dat, split.var = 1:10, nfolds = 5, lambda = 1,
-#'                    risk.control = TRUE, risk.threshold = 2.75)
+#' fit <- rcDT.select(data = dat, 
+#'                    split.var = 1:10, 
+#'                    nfolds = 5,
+#'                    risk.threshold = 2.75)
 #' 
 
 
@@ -72,7 +81,8 @@ rcDT.select <- function(data,
                         stabilize = TRUE, 
                         use.other.nodes = TRUE, 
                         use.bootstrap = FALSE,
-                        extremeRandomized = FALSE){
+                        extremeRandomized = FALSE,
+                        verbose = TRUE){
   
   start.time <- Sys.time()
   # input checks
@@ -141,6 +151,7 @@ rcDT.select <- function(data,
     }
   }
   
+  pboptions(type = ifelse(verbose, "timer", "none"))
   out.lambdas <- pblapply(lambdas, function(lam){
 
     # Grow initial tree to get sequence of alpha values

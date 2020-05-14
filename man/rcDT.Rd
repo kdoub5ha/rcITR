@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcDT.R
 \name{rcDT}
 \alias{rcDT}
-\title{Grows rcDT model}
+\title{Constructs an rcDT model}
 \usage{
 rcDT(data, split.var, test = NULL, ctg = NULL, efficacy = "y",
   risk = "r", col.trt = "trt", col.prtx = "prtx", risk.control = TRUE,
@@ -17,7 +17,7 @@ Must contain efficacy variable (y),
 risk variable (r), 
 binary treatment indicator coded as 0 / 1 (trt), 
 propensity score (prtx),
-candidate splitting covariates.}
+candidate splitting covariates (split.var).}
 
 \item{split.var}{numeric vector. Columns of spliting variables.}
 
@@ -25,9 +25,9 @@ candidate splitting covariates.}
 
 \item{ctg}{numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet.}
 
-\item{efficacy}{char. Efficacy outcome column. Defaults to 'y'.}
+\item{efficacy}{char. Efficacy outcome column. Assumes larger values are desirable Defaults to 'y'.}
 
-\item{risk}{char. Risk outcome column. Defaults to 'r'.}
+\item{risk}{char. Risk outcome column. Assumes smaller values are desirable Defaults to 'r'.}
 
 \item{col.trt}{char. Treatment indicator column name. Should be of form 0/1 or -1/+1.}
 
@@ -47,7 +47,8 @@ Optional arguments}
 
 \item{stabilize}{logical indicating if efficacy should be modeled using residuals. Defaults to TRUE.}
 
-\item{stabilize.type}{character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest.}
+\item{stabilize.type}{character specifying method used for estimating residuals. 
+Current options are 'linear' for linear model (default) and 'rf' for random forest.}
 
 \item{use.other.nodes}{logical. Should global estimator of objective function be used. Defaults to TRUE.}
 
@@ -62,20 +63,35 @@ Optional arguments}
 \item{print.summary}{logical. Should a summary of the tree building be printed? Defaults to TRUE for single trees.}
 }
 \value{
-Summary of a single interaction tree. Each `node` begins with "0" indicating the root node, 
+Summary of rcDT model
+
+\item{tree}{data.frame with the following: Each `node` begins with "0" indicating the root node, 
 followed by a "1" or "2" indicating the less than (or left) child node or greater than (or right) child node. 
 Additionally, the number of observations `size`, number treated `n.1`, number on control `n.0`, and treatment effect `trt.effect`
 summaries are provided.  The splitting information includes the column of the chosen splitting variable `var`, the variable name 'vname',
 the direction the treatment is sent `cut.1` ("r" for right child node, and "l" for left), the chosen split value `cut.2`, 
-and the estimated value function `score`.
+and the estimated value function `score`.}
+
+\item{y}{efficacy values used in modeling. Will likely differ from original input `y` if stabilization was used}
+
+\item{risk.threshold}{value of risk control used}
+
+\item{data}{input dataset}
+
+\item{fit.y}{fitted model for residuals is `stabilize` was used}
+
+\item{split.var}{splitting covariates used}
 }
 \description{
-Main function in mvITR package. Constructs an rcDT model which maximizes an efficacy outcome (y) subject to #'              a risk constraint (r).
+Constructs a risk controlled decision tree (rcDT) given an 
+efficacy and risk outcome.
 }
 \examples{
+set.seed(123)
 dat <- generateData()
 # Generates tree using simualated EMR data with splitting variables located in columns 1-4.
-tree <- rcDT(data = dat, split.var = 1:10, 
-                 risk.control = TRUE, risk.threshold = 2.75, 
-                 lambda = 1)
+tree <- rcDT(data = dat, 
+             split.var = 1:10, 
+             risk.threshold = 2.75, 
+             lambda = 1)
 }

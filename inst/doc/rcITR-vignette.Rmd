@@ -54,14 +54,22 @@ str(dat)
 
 \vspace{5mm}
 
-Figure 1 presents the risk score distributions for the original treated and control groups. Risk scores are lower on average for the control arm of the study and so we may want to set the risk threshold to be around the center of the distribution of risk scores for the control arm. Hence, we will set $\tau = 2.75$. We will use a penalty of $\lambda = 1$ temporarily. 
+Figure 1 presents the risk and efficacy score distributions for the original treated and control groups. Risk scores are lower on average for the control arm of the study and so we may want to set the risk threshold to be around the center of the distribution of risk scores for the control arm. Note that efficacy scores do not differ much between the two groups. We will set $\tau = 2.75$, and use a penalty of $\lambda = 1$ for the demonstration. 
 
-```{r Summary plots, results='markup', echo=FALSE, results='show', fig.cap="Figure 1. Risk score distribution for simulated data", fig.width=5, fig.height=5}
+```{r Summary plots, results='markup', echo=FALSE, results='show', fig.cap="Figure 1. Risk score distribution for simulated data", fig.width=8, fig.height=3}
 
+par(mfrow = c(1,2))
 boxplot(dat$r ~ dat$trt, boxwex = 0.25,
         xlab = "Original Treatment Group",
-        main = "Risk Distribution by Treatment Group",
+        main = "Risk Distribution\nby Treatment Group",
         ylab = "Risk Score", axes = FALSE)
+axis(1, at = 1:2, labels = c("Control", "Treated"),
+     col = "white"); axis(2, las = 2)
+
+boxplot(dat$y ~ dat$trt, boxwex = 0.25,
+        xlab = "Original Treatment Group",
+        main = "Efficacy Distribution\nby Treatment Group",
+        ylab = "Efficacy Score", axes = FALSE)
 axis(1, at = 1:2, labels = c("Control", "Treated"),
      col = "white"); axis(2, las = 2)
 
@@ -110,7 +118,10 @@ The function `prune()` determines the series of optimally pruned subtrees from a
 \vspace{5mm}
 
 ```{r Code Tree Pruning, results='markup'}
-pruned1 <- prune(tre1, a = 0, risk.threshold = 2.75, lambda = 1)
+pruned1 <- prune(tre = tre1, 
+                 a = 0, 
+                 risk.threshold = 2.75, 
+                 lambda = 1)
 ```
 
 ```{r Code Tree Pruning2, results='markup', echo=FALSE}
@@ -131,19 +142,19 @@ The first row represents the entire tree (`subtree 1`) and provides the weakest 
 One issue with the approach above for model selection is the risk of overfitting through using the training data alone for model selection. The function `rcDT.select()` will perform n-fold cross validation to select the optimal tuning parameter ($\alpha$). The function returns the optimal model, selected tuning parameter, and several summary measures.
 
 ```{r, Cross Validated Pruning Model, results='hide', echo=TRUE}
-rcDT.fit <- rcDT.select(dat = dat, 
+rcDT.fit <- rcDT.select(data = dat, 
                         split.var = 1:10,
-                        lambda = 1,
                         risk.threshold = 2.75, 
                         efficacy = "y",
                         risk = "r",
                         col.trt = "trt",
                         col.prtx = "prtx",
-                        nfolds = 5)
+                        nfolds = 5,
+                        verbose = FALSE)
 
 ```
 
-Note that the optimal tree presented here is selected using 5-fold cross validation and is `subtree 3` from the pruning procedure. The final model has a training set benefit estimated as `r sprintf("%.2f", mean(dat$y * (dat$trt == predict.ITR(rcDT.fit$best.tree.alpha, dat, 1:10)$trt.pred) / 0.5))` and risk estimated as `r sprintf("%.2f", mean(dat$r * (dat$trt == predict.ITR(rcDT.fit$best.tree.alpha, dat, 1:10)$trt.pred) / 0.5))`. 
+Note that the optimal tree presented here is selected using 5-fold cross validation and is `subtree 1` from the pruning procedure. The final model has a training set benefit estimated as `r sprintf("%.2f", mean(dat$y * (dat$trt == predict.ITR(rcDT.fit$best.tree, dat, 1:10)$trt.pred) / 0.5))` and risk estimated as `r sprintf("%.2f", mean(dat$r * (dat$trt == predict.ITR(rcDT.fit$best.tree, dat, 1:10)$trt.pred) / 0.5))`. 
 
 ## Constructing a Risk Controlled Random Forest (rcRF) Model 
 
@@ -155,15 +166,15 @@ Below is the function call for constructing an rcRF model. In the next section w
 
 ```{r, Code Forest Growth, results='markup'}
 set.seed(2)
-rcRF.fit <- rcRF(dat, 
-                 split.var = 1:10, 
-                 efficacy = "y", 
-                 risk = "r",
-                 col.trt = "trt",
-                 col.prtx = "prtx",
-                 risk.threshold = 2.75,
-                 ntree = 100, 
-                 lambda = 0.5)
+rcRF.fit <- rcRF.select(data = dat, 
+                        split.var = 1:10, 
+                        efficacy = "y", 
+                        risk = "r",
+                        col.trt = "trt",
+                        col.prtx = "prtx",
+                        risk.threshold = 2.75,
+                        ntree = 100,
+                        verbose = FALSE)
 ```
 
 ## Predictions for rcDT and rcRF Models
@@ -173,10 +184,10 @@ Prediction from rcDT and rcRF models can be obtained using the `predict.ITR()` f
 \vspace{5mm}
 
 ```{r, Treatment Prediction, results='markup', echo=TRUE}
-preds.rcDT <- predict.ITR(rcDT.fit$best.tree.alpha, 
+preds.rcDT <- predict.ITR(fit = rcDT.fit$best.tree, 
                           new.data = dat, 
                           split.var = 1:10)$trt.pred
-preds.rcRF <- predict.ITR(rcRF.fit, 
+preds.rcRF <- predict.ITR(fit = rcRF.fit$best.fit, 
                           new.data = dat, 
                           split.var = 1:10)$trt.pred
 
@@ -228,7 +239,8 @@ Finally, we include a function to calculate the importance of a predictor relati
 \vspace{5mm}
 
 ```{r, Code Variable Importance, results='markup'}
-VI <- Variable.Importance.ITR(rcRF.fit, sort = FALSE)
+VI <- Variable.Importance.ITR(rcRF.fit = rcRF.fit$best.fit, 
+                              sort = FALSE)
 do.call(cbind, VI)
 ```
  
@@ -238,4 +250,4 @@ The variable importance results would be interpreted as $X_1$ and $X_2$ being im
 
 ## References
 
-[In Submission] Doubleday, K., Zhou, J., Fu, H. (2020), "Risk Controlled Decision Trees and Random Forests for Individualized Treatment Recommendations".
+[In Submission] Doubleday, K., Zhou, H., Fu, H., Zhou, J. (2020), "Risk Controlled Decision Trees and Random Forests for Precision Medicine".

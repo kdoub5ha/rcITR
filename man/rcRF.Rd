@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcRF.R
 \name{rcRF}
 \alias{rcRF}
-\title{Builds an rcRF model for risk controlled optimization}
+\title{Constructs rcRF model}
 \usage{
 rcRF(data, split.var, efficacy = "y", risk = "r", col.trt = "trt",
   col.prtx = "prtx", risk.control = TRUE, risk.threshold = NA,
@@ -10,8 +10,8 @@ rcRF(data, split.var, efficacy = "y", risk = "r", col.trt = "trt",
   test = NULL, ctg = NULL, N0 = 20, n0 = 5, max.depth = 10,
   ntree = 500, mtry = max(floor(length(split.var)/3), 1),
   avoid.nul.tree = FALSE, AIPWE = FALSE, verbose = FALSE,
-  use.other.nodes = TRUE, extremeRandomized = FALSE,
-  importance.measures = FALSE, order.importances = TRUE)
+  use.other.nodes = TRUE, extremeRandomized = FALSE, importance = FALSE,
+  order.importances = TRUE)
 }
 \arguments{
 \item{data}{data.frame. Data used to construct rcRF model.
@@ -39,7 +39,8 @@ Optional arguments}
 
 \item{stabilize}{logical indicating if efficacy should be modeled using residuals. Defaults to TRUE.}
 
-\item{stabilize.type}{character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest.}
+\item{stabilize.type}{character specifying method used for estimating residuals. 
+Current options are 'linear' for linear model (default) and 'rf' for random forest.}
 
 \item{test}{data.frame of testing observations. Should be formatted the same as 'data'.}
 
@@ -53,7 +54,8 @@ Optional arguments}
 
 \item{ntree}{numeric. Number of trees generated. Defaults to 500.}
 
-\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.}
+\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. 
+Defaults to larger of 1 and length(split.var)/3.}
 
 \item{avoid.nul.tree}{logical. Should null trees be discarded?}
 
@@ -65,14 +67,14 @@ Optional arguments}
 
 \item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril.}
 
-\item{importance.measures}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
+\item{importance}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
 
 \item{order.importances}{logical. Should importances be ordered (if requested)?}
 
 \item{col.ptrx}{char. Propensity score column name.}
 }
 \value{
-A list of characteristics of the forest.
+List of rcRF outputs
 
 \item{ID.Boots.Samples}{list of bootstrap sample IDs}
 
@@ -83,16 +85,16 @@ A list of characteristics of the forest.
 \item{...}{Summaries for in and out of bag samples}
 }
 \description{
-This function constructs a random forest of rcDT trees method. 
-A forest object can be an argument into `predict.ITR()` along with data in order to 
-obtain treatment predictions. An output from this function can also be given to the `Variable.Importance.ITR()` 
-function to estimate predictor importance.
+Constructs a risk controlled random forest (rcRF) composed of rcDT predictors.
 }
 \examples{
 set.seed(123)
-dat <- generateData(n = 500)
+dat <- generateData()
 # Generates rcRF model using simualated data with splitting variables located in columns 1-10.
-fit <- rcRF(dat = dat, split.var = 1:10, ntree = 200,
-            risk.control = TRUE, risk.threshold = 2.75, 
+fit <- rcRF(data = dat, 
+            split.var = 1:10, 
+            ntree = 200,
+            risk.threshold = 2.75, 
             lambda = 1)
+            
 }

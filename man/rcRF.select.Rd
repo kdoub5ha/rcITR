@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcRF.select.R
 \name{rcRF.select}
 \alias{rcRF.select}
-\title{Cross Validation for Optimal rcRF Model Selection}
+\title{rcRF model selection}
 \usage{
 rcRF.select(data, split.var, test = NULL, N0 = 20, n0 = 5,
   efficacy = "y", risk = "r", col.trt = "trt", col.prtx = "prtx",
@@ -11,7 +11,7 @@ rcRF.select(data, split.var, test = NULL, N0 = 20, n0 = 5,
   mtry = max(floor(length(split.var)/3), 1), avoid.nul.tree = FALSE,
   max.depth = 15, stabilize.type = c("linear", "rf"), stabilize = TRUE,
   verbose = FALSE, use.other.nodes = TRUE, extremeRandomized = FALSE,
-  importance.measures = FALSE, order.importances = TRUE, max.iter = 10,
+  importance = FALSE, order.importances = TRUE, max.iter = 10,
   risk.tolerance = c(0.995, 1.005))
 }
 \arguments{
@@ -38,6 +38,8 @@ candidate splitting covariates.}
 
 \item{col.prtx}{char. Propensity score column name.}
 
+\item{ntree}{numeric. Number of trees to construct.}
+
 \item{lambda.upper}{numeric. Upper bound for risk penalty. An attempt at reasonable selection will be performed automatically.}
 
 \item{risk.control}{logical. Should risk be controlled? Defaults to TRUE.}
@@ -48,7 +50,10 @@ candidate splitting covariates.}
 
 \item{ctg}{numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet.}
 
-\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.}
+\item{mtry}{numeric specifying the number of randomly selected splitting variables to be included. 
+Defaults to the greater of 1 and length(split.var)/3.}
+
+\item{avoid.nul.tree}{logical. Should null trees be discarded?}
 
 \item{max.depth}{numeric specifying maximum depth of the tree. Defaults to 15 levels.}
 
@@ -56,28 +61,30 @@ candidate splitting covariates.}
 
 \item{stabilize}{logical indicating if efficacy should be modeled using residuals. Defaults to TRUE.}
 
+\item{verbose}{logical. Give updates about forest progression?}
+
 \item{use.other.nodes}{logical. Should global estimator of objective function be used. Defaults to TRUE.}
 
 \item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril.}
 
-\item{importance.measures}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
+\item{importance}{logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.}
 
 \item{order.importances}{logical. Should importances be ordered (if requested)?}
 
 \item{max.iter}{numeric. Indicates the maximum number of forest iterations to perform. Defaults to 10.}
 
-\item{risk.tolerance}{numeric. Two component vector giving the bound on risk that is acceptable (acceptable risk range is calcuated as risk.threshold * risk.tolerance). Defaults to c(0.995, 1.005), i.e. 0.5% tolerance.}
+\item{risk.tolerance}{numeric. Two component vector giving the bound on risk that is acceptable (acceptable risk range is calcuated as risk.threshold * risk.tolerance). Defaults to c(0.995, 1.005), i.e. 0.5\% tolerance.}
 }
 \value{
 A summary of the cross validation including optimal penalty parameter and the optimal model.
 
 \item{best.fit}{optimal rcRF model}
 
-\item{best.lambda}{optimal lambda value selected}
+\item{lambda}{optimal lambda value selected}
 
-\item{best.risk}{out-of-bag risk from best model}
+\item{oob.risk}{out-of-bag risk from best model}
 
-\item{converged}{was the max number of iterations met}
+\item{converged}{max number of iterations reached?}
 
 \item{importances}{importance measures, if requested}
 
@@ -89,15 +96,15 @@ A summary of the cross validation including optimal penalty parameter and the op
 }
 \description{
 Performs model selection for rcRF model to 
-select the best penalty parameter ($\lambda$) from the set of optimally pruned subtree generated from 
-`prune` function.
+select the best penalty parameter ($\lambda$).
 }
 \examples{
 
 # Grow large tree
-set.seed(1)
+set.seed(123)
 dat <- generateData()
-fit <- rcRF.select(dat, split.var = 1:10, nfolds = 5, lambda = 1,
-                   risk.control = TRUE, risk.threshold = 2.75)
+fit <- rcRF.select(data = dat, 
+                   split.var = 1:10,
+                   risk.threshold = 2.75)
 
 }

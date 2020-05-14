@@ -1,14 +1,15 @@
-#' @title Grows rcDT model
-#' @description Main function in mvITR package. Constructs an rcDT model which maximizes an efficacy outcome (y) subject to #'              a risk constraint (r). 
+#' @title Constructs an rcDT model
+#' @description Constructs a risk controlled decision tree (rcDT) given an 
+#' efficacy and risk outcome.  
 #' @param data data.frame. Data used to construct rcDT model.  
 #' Must contain efficacy variable (y), 
 #' risk variable (r), 
 #' binary treatment indicator coded as 0 / 1 (trt), 
 #' propensity score (prtx),
-#' candidate splitting covariates.
+#' candidate splitting covariates (split.var).
 #' @param split.var numeric vector. Columns of spliting variables.
-#' @param efficacy char. Efficacy outcome column. Defaults to 'y'.
-#' @param risk char. Risk outcome column. Defaults to 'r'.
+#' @param efficacy char. Efficacy outcome column. Assumes larger values are desirable Defaults to 'y'.
+#' @param risk char. Risk outcome column. Assumes smaller values are desirable Defaults to 'r'.
 #' @param col.trt char. Treatment indicator column name. Should be of form 0/1 or -1/+1.
 #' @param col.prtx char. Propensity score column name. 
 #' @param risk.control logical. Should risk be controlled? Defaults to TRUE.
@@ -22,26 +23,35 @@
 #' @param max.depth numeric specifying maximum depth of the tree. Defaults to 15 levels. 
 #' @param mtry numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.
 #' @param stabilize logical indicating if efficacy should be modeled using residuals. Defaults to TRUE. 
-#' @param stabilize.type character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest. 
+#' @param stabilize.type character specifying method used for estimating residuals. 
+#' Current options are 'linear' for linear model (default) and 'rf' for random forest. 
 #' @param use.other.nodes logical. Should global estimator of objective function be used. Defaults to TRUE. 
 #' @param ctg numeric vector corresponding to the categorical input columns.  Defaults to NULL.  Not available yet. 
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
 #' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
 #' @param print.summary logical. Should a summary of the tree building be printed? Defaults to TRUE for single trees.
-#' @return Summary of a single interaction tree. Each `node` begins with "0" indicating the root node, 
+#' @return Summary of rcDT model
+#' @return \item{tree}{data.frame with the following: Each `node` begins with "0" indicating the root node, 
 #' followed by a "1" or "2" indicating the less than (or left) child node or greater than (or right) child node. 
 #' Additionally, the number of observations `size`, number treated `n.1`, number on control `n.0`, and treatment effect `trt.effect`
 #' summaries are provided.  The splitting information includes the column of the chosen splitting variable `var`, the variable name 'vname',
 #' the direction the treatment is sent `cut.1` ("r" for right child node, and "l" for left), the chosen split value `cut.2`, 
-#' and the estimated value function `score`.
+#' and the estimated value function `score`.}
+#' @return \item{y}{efficacy values used in modeling. Will likely differ from original input `y` if stabilization was used}
+#' @return \item{risk.threshold}{value of risk control used}
+#' @return \item{data}{input dataset}
+#' @return \item{fit.y}{fitted model for residuals is `stabilize` was used}
+#' @return \item{split.var}{splitting covariates used}
 #' @import randomForest
 #' @export
 #' @examples
+#' set.seed(123)
 #' dat <- generateData()
 #' # Generates tree using simualated EMR data with splitting variables located in columns 1-4.
-#' tree <- rcDT(data = dat, split.var = 1:10, 
-#'                  risk.control = TRUE, risk.threshold = 2.75, 
-#'                  lambda = 1)
+#' tree <- rcDT(data = dat, 
+#'              split.var = 1:10, 
+#'              risk.threshold = 2.75, 
+#'              lambda = 1)
 
 
 rcDT <- function(data, 
@@ -67,7 +77,10 @@ rcDT <- function(data,
                  print.summary = TRUE)
 {
   
+  # =========================
   # input checks
+  # =========================
+
   if(!is.data.frame(data)) stop("data argument must be dataframe")
   if(!is.numeric(split.var)) stop("split.var must be numeric vector")
 
@@ -85,6 +98,10 @@ rcDT <- function(data,
     warning("mtry is larger than split.var length -- setting mtry to length(split.var)")
     mtry <- length(split.var)
   } 
+  
+  # =========================
+  # end input checks
+  # =========================
   
   if(print.summary) 
     sprintf("rcDT model risk control specified as %s; Penalty specified as %s", risk.threshold, lambda)

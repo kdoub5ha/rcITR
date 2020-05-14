@@ -1,18 +1,21 @@
-#' @title Sends testing data and permuted testing data down a bootstrap tree from an rcRF object for efficacy scores. 
+#' @title Efficacy importance via oob permutation
 #' 
-#' @description Sends dat.new down a tree inside a random forest. 
+#' @description Sends dat.new down an rcDT structure inside an rcRF
 #' Calcuates value and permuted value for variable importance measures 
 #' @param dat.new the new data set being sent down the tree. Required input. 
-#' @param tre constructed tree.
-#' @param col.y the response variable. Required input. 
+#' @param tre tree from rcDT function.
+#' @param col.y the efficacy variable. Required input. 
+#' @param col.r the risk variable. Required input. 
 #' @param col.trt the treatment indicator.  Must be binary. Required input.
 #' @param col.prtx the probability of being assigned to treatment group. Required input. 
+#' @param lambda numeric value for risk penalty.
 #' @param ctg identifies the categorical input columns.  Defaults to NA.  Not available yet. 
 #' @param n0 minimum number of treatment/control observations needed in a split to call a node terminal. Defaults to 5. 
 #' @param N0 minimum number of observations needed in a node to stop splitting. 
 #' @param revise.tree internal variable.
 #' @param depth internval variable
 #' @param AIPWE indicator for AIPWE estimation.
+#' @return List of importance items
 #' @return \item{tre0}{input tree with score from original tree and score from permutation from each variable used in the tree}
 #' @return \item{score}{score from the permuted data}
 #' @export
@@ -98,7 +101,7 @@ send.down.VI.ITR.Efficacy <-function(dat.new,
                         status = rep(1, nrow(dat0)), 
                         n0 = 0, 
                         lambda = 0, 
-                        z = z))# itrtest(dat0, z, n0=n0, AIPWE)
+                        z = z))
       tre0$score.test[i] <- t2
     }
     if (is.na(t2) && revise.tree) {
@@ -126,6 +129,6 @@ send.down.VI.ITR.Efficacy <-function(dat.new,
                                              status = rep(1, nrow(dat.new)), 
                                              n0 = 0, 
                                              lambda = 0, 
-                                             z = trt.pred)))#,score=itrtest(dat.new, trt.pred, n0=n0, AIPWE))
+                                             z = trt.pred)))
   return(out)
 }

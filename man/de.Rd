@@ -2,19 +2,19 @@
 % Please edit documentation in R/de.R
 \name{de}
 \alias{de}
-\title{Finds all decendants of a particular node in a tree.}
+\title{Node descendant identifier}
 \usage{
 de(x, tree)
 }
 \arguments{
-\item{x}{node}
+\item{x}{character indicating node}
 
-\item{tree}{interaction tree}
+\item{tree}{tree structure generated from rcDT()}
 }
 \value{
-Returns all the descendant nodes from the node `x`
+Returns all the descendant nodes from the node `x` as a character string
 }
 \description{
-This function identifies all nodes in a given tree structure
+Identifies all nodes in a given tree structure
 which are descendants of the input node.
 }

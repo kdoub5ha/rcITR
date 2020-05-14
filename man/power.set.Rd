@@ -2,7 +2,7 @@
 % Please edit documentation in R/power.set.R
 \name{power.set}
 \alias{power.set}
-\title{Categorical predictor subsetting in the tree growing function.}
+\title{Power set construction}
 \usage{
 power.set(x)
 }

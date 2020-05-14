@@ -1,12 +1,8 @@
-#' @title Generates example data
-#' @description Generates n example data samples for constructing and rcDT model.
-#' @param n numeric. Number of example samples to be generated.
-#' @return Summary of a single interaction tree. Each `node` begins with "0" indicating the root node, 
-#' followed by a "1" or "2" indicating the less than (or left) child node or greater than (or right) child node. 
-#' Additionally, the number of observations `size`, number treated `n.1`, number on control `n.0`, and treatment effect `trt.effect`
-#' summaries are provided.  The splitting information includes the column of the chosen splitting variable `var`, the variable name 'vname',
-#' the direction the treatment is sent `cut.1` ("r" for right child node, and "l" for left), the chosen split value `cut.2`, 
-#' and the estimated value function `score`.
+#' @title Example data for rcITR package demonstration
+#' @description Generates data for demonstration of rcDT and rcRF model construction.
+#' @param n numeric. Number of example samples to be generated. Defaults to 1000.
+#' @return data.frame with 10 covariates (x1-x10), efficacy (y), risk (r), 
+#'         treatment indicator (trt), and propensity score (prtx).
 #' @import randomForest
 #' @export
 #' @examples

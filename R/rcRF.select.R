@@ -1,7 +1,6 @@
-#' @title Cross Validation for Optimal rcRF Model Selection
+#' @title rcRF model selection
 #' @description Performs model selection for rcRF model to 
-#' select the best penalty parameter ($\lambda$) from the set of optimally pruned subtree generated from 
-#' `prune` function. 
+#' select the best penalty parameter ($\lambda$).
 #' @param data data.frame. Data used to construct rcDT model.  
 #' Must contain efficacy variable (y), 
 #' risk variable (r), 
@@ -15,11 +14,13 @@
 #' @param col.prtx char. Propensity score column name. 
 #' @param risk.control logical. Should risk be controlled? Defaults to TRUE.
 #' @param risk.threshold numeric. Desired level of risk control. 
+#' @param ntree numeric. Number of trees to construct.
 #' @param test data.frame of testing observations. Should be formatted the same as 'data'.
 #' @param N0 numeric specifying minimum number of observations required to call a node terminal. Defaults to 20.
 #' @param n0 numeric specifying minimum number of treatment/control observations needed in a split to declare a node terminal. Defaults to 5. 
 #' @param max.depth numeric specifying maximum depth of the tree. Defaults to 15 levels. 
-#' @param mtry numeric specifying the number of randomly selected splitting variables to be included. Defaults to number of splitting variables.
+#' @param mtry numeric specifying the number of randomly selected splitting variables to be included. 
+#' Defaults to the greater of 1 and length(split.var)/3.
 #' @param stabilize logical indicating if efficacy should be modeled using residuals. Defaults to TRUE. 
 #' @param stabilize.type character specifying method used for estimating residuals. Current options are 'linear' for linear model (default) and 'rf' for random forest. 
 #' @param use.other.nodes logical. Should global estimator of objective function be used. Defaults to TRUE. 
@@ -27,15 +28,17 @@
 #' @param AIPWE logical. Should AIPWE (TRUE) or IPWE (FALSE) be used. Not available yet. 
 #' @param extremeRandomized logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. 
 #' @param lambda.upper numeric. Upper bound for risk penalty. An attempt at reasonable selection will be performed automatically. 
+#' @param importance logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.
 #' @param order.importances logical. Should importances be ordered (if requested)?
-#' @param importance.measures logical. Indicated if variable importance measures should be estimated and returned. Defaults to FALSE.
 #' @param max.iter numeric. Indicates the maximum number of forest iterations to perform. Defaults to 10.
-#' @param risk.tolerance numeric. Two component vector giving the bound on risk that is acceptable (acceptable risk range is calcuated as risk.threshold * risk.tolerance). Defaults to c(0.995, 1.005), i.e. 0.5% tolerance. 
+#' @param risk.tolerance numeric. Two component vector giving the bound on risk that is acceptable (acceptable risk range is calcuated as risk.threshold * risk.tolerance). Defaults to c(0.995, 1.005), i.e. 0.5\% tolerance. 
+#' @param avoid.nul.tree logical. Should null trees be discarded?
+#' @param verbose logical. Give updates about forest progression?
 #' @return A summary of the cross validation including optimal penalty parameter and the optimal model. 
 #' @return \item{best.fit}{optimal rcRF model}
-#' @return \item{best.lambda}{optimal lambda value selected}
-#' @return \item{best.risk}{out-of-bag risk from best model}
-#' @return \item{converged}{was the max number of iterations met}
+#' @return \item{lambda}{optimal lambda value selected}
+#' @return \item{oob.risk}{out-of-bag risk from best model}
+#' @return \item{converged}{max number of iterations reached?}
 #' @return \item{importances}{importance measures, if requested}
 #' @return \item{risks}{vector of risk scores obtained over tuning procedure}
 #' @return \item{lambdas}{vector of lambda values tried over tuning procedure}
@@ -45,10 +48,11 @@
 #' @examples
 #' 
 #' # Grow large tree
-#' set.seed(1)
+#' set.seed(123)
 #' dat <- generateData()
-#' fit <- rcRF.select(dat, split.var = 1:10, nfolds = 5, lambda = 1,
-#'                    risk.control = TRUE, risk.threshold = 2.75)
+#' fit <- rcRF.select(data = dat, 
+#'                    split.var = 1:10,
+#'                    risk.threshold = 2.75)
 #' 
 
 
@@ -75,7 +79,7 @@ rcRF.select <- function(data,
                         verbose = FALSE, 
                         use.other.nodes = TRUE, 
                         extremeRandomized = FALSE, 
-                        importance.measures = FALSE, 
+                        importance = FALSE, 
                         order.importances = TRUE,
                         max.iter = 10,
                         risk.tolerance = c(0.995, 1.005)){
@@ -131,9 +135,10 @@ rcRF.select <- function(data,
       sum(data[,risk] * (data[,col.trt] == 1) / data[,col.prtx]) / sum((data[,col.trt] == 1) / data[,col.prtx]))
   )
 
-  while(((risks[length(risks)] > 1.005*risk.threshold) | 
-         (risks[length(risks)] < 0.995*risk.threshold))& 
+  while(((risks[length(risks)] > risk.tolerance[2]*risk.threshold) | 
+         (risks[length(risks)] < risk.tolerance[1]*risk.threshold))& 
         iter < max.iter + 1){
+  
     fit.lam <- rcRF(data = data, 
                     split.var = split.var, 
                     efficacy = efficacy, 
@@ -154,13 +159,17 @@ rcRF.select <- function(data,
                     mtry = mtry, 
                     avoid.nul.tree = avoid.nul.tree, 
                     AIPWE = AIPWE, 
-                    verbose = verbose,
+                    verbose = FALSE,
                     use.other.nodes = use.other.nodes, 
                     extremeRandomized = extremeRandomized, 
-                    importance.measures = FALSE, 
+                    importance = FALSE, 
                     order.importances = order.importances)
     fits <- c(fits, list(fit.lam))
     risks <- c(risks, fit.lam$risk.oob[length(fit.lam$risk.oob)])
+    if(verbose){
+      cat("Completed Iteration", iter, "; OOB risk =", risks[length(risks)], "\n")
+    }
+    
     iter <- iter + 1
 
     if(length(lambdas) == 1){
@@ -197,14 +206,18 @@ rcRF.select <- function(data,
     }
   }
 
-  best.idx <- which.min(abs(risks - risk.threshold))
-  best.fit <- fits[[best.idx - 1]]
-  best.lambda <- lambdas[best.idx]
-  best.risk <- risks[best.idx]
+  efficacies <- do.call(c, lapply(fits, function(ff) ff$value.oob[length(ff$value.oob)]))
+  risks <- risks[-1]
+  best.idx1 <- which(risks < risk.threshold * risk.tolerance[2])
+  best.idx2 <- which.max(efficacies[best.idx1])
+  best.fit <- fits[best.idx1][[best.idx2]]
+  best.lambda <- lambdas[best.idx1][best.idx2]
+  best.risk <- risks[best.idx1][best.idx2]
   end.time <- Sys.time()
 
-  if(importance.measures){
-    importances <- Variable.Importance.ITR(RF.fit = best.fit, sort = order.importances)
+  if(importance){
+    if(verbose) cat("Calculating Importances")
+    importances <- Variable.Importance.ITR(rcRF.fit = best.fit, sort = order.importances)
   } else{
     importances <- NA
   }
@@ -217,11 +230,11 @@ rcRF.select <- function(data,
                 lambdas[-length(lambdas)],
                 end.time - start.time), 
            c("best.fit", 
-             "best.lambda",
-             "best.risk",
+             "lambda",
+             "oob.risk",
              "converged",
              "importances",
              "risks",
              "lambdas",
-             "time.elapsed"))
+             "elapsed.time"))
 }

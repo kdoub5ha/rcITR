@@ -1,20 +1,22 @@
-#' @title Prunes an rcDT model to determine set of optimally pruned subtrees
+#' @title Optimal sequence of subtrees of rcDT model
 #' 
-#' @description The `prune` function determines the "weakest link" criteria for a given tree
-#' in order to evaluate the order in which branches are pruned.
+#' @description Determines the sequence of optimally pruned subtrees for 
+#'              an rcDT model. 
 #' @param tre sets the tree to be pruned 
-#' @param a sets the value of the splitting penalty
-#' @param train the training data used to create the tree
-#' @param test the testing data to be used.  Defaults to NULL.
+#' @param risk.control logical indicating if risk controlled model is under consideration
+#' @param risk.threshold numeric indicating the value of the risk control. Defaults to NA.
+#' @param a numeric value of the splitting penalty. Defaults to zero.
+#' @param test data.frame of testing data. Defaults to NULL.
 #' @param AIPWE indicator for AIPWE estimation.
 #' @param n0 minimum number of observations allowed in a treatment group. Defaults to 5. 
 #' @param ctgs columns of categorical variables.
-#' @return summary of pruned branches and the associated value of the tree after pruning. 
+#' @return summary of sequence of subtrees 
 #' @return \item{result}{contains columns: `node.rm` which is the weakest link at each
 #' iteration of the pruning algorithm; `size.tree` and `n.tmnl` give number of total nodes and
 #' terminal nodes in each subtree; `alpha` is the weakest link scoring criteria; `V` and `V.test`
 #' are the overall value of the tree for the training and tesing samples; `V.a` and `Va.test`
-#' give the penalized value for the training and testing samples.}
+#' give the penalized value for the training and testing samples. `Benefit` and `Risk` scores
+#' are also reported.}
 #' @return \item{subtrees}{list of optimally pruned subtrees of `tre`}
 #' @export
 #' 

@@ -6,28 +6,30 @@
 #' the original value and permuted value indicates the predictor is more important in predicting treatment. The function
 #' returns the variables in order of importance along with the importance measure, scaled to be out of 1.  
 #' 
-#' @param RF.fit forest object from rcRF(). Required input. 
+#' @param rcRF.fit rcRF object from rcRF(). Required input. 
 #' @param n0 minimum number of treatment/control observations needed in a split to call a node terminal. Defaults to 2. 
-#' @param sort sort the variable importance measure? Defaults to TRUE. 
 #' @param N0 minimum number of observations needed in a split to call a node terminal. Defaults to 20. 
+#' @param sort sort the variable importance measure? Defaults to TRUE. 
 #' @param details print details of each tree as the function progresses. Defaults to FALSE.
 #' @param depth internal variable.
 #' @param AIPWE indicator for AIPWE estimation.
 #' @return Returns list of total (VI), efficacy (VI.Efficacy), and risk (VI.Risk) 
 #'         ordered variable importance measure calculated for each splitting variable. 
 #' @import randomForest
+#' @export
 #' @examples 
 #' set.seed(123)
-#' dat <- generateData(n = 1000)
+#' dat <- generateData()
 #' # Build a forest with 100 trees
-#' fit <- rcRF(dat = dat, split.var = 1:10, ntree = 200,
-#'             risk.control = TRUE, risk.threshold = 2.75, 
+#' fit <- rcRF(data = dat, 
+#'             split.var = 1:10, 
+#'             ntree = 200,
+#'             risk.threshold = 2.75, 
 #'             lambda = 1)
 #' VI <- Variable.Importance.ITR(fit)
-#' @export
 
 
-Variable.Importance.ITR <- function(RF.fit, 
+Variable.Importance.ITR <- function(rcRF.fit, 
                                     n0 = 5, 
                                     N0 = 20, 
                                     sort = TRUE, 
@@ -35,10 +37,10 @@ Variable.Importance.ITR <- function(RF.fit,
                                     depth = 1, 
                                     AIPWE = FALSE){
 
-  trees <- RF.fit$TREES
-  id.boots <- RF.fit$ID.Boots.Samples
+  trees <- rcRF.fit$TREES
+  id.boots <- rcRF.fit$ID.Boots.Samples
   # ARGUMENTS FOR MODEL SPECIFICATION 
-  Model.Specification <- RF.fit$Model.Specification
+  Model.Specification <- rcRF.fit$Model.Specification
   dat0 <- Model.Specification$data
   col.y <- Model.Specification$efficacy
   col.r <- Model.Specification$risk

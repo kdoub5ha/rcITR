@@ -2,7 +2,7 @@
 % Please edit documentation in R/send.down.VI.ITR.Efficacy.R
 \name{send.down.VI.ITR.Efficacy}
 \alias{send.down.VI.ITR.Efficacy}
-\title{Sends testing data and permuted testing data down a bootstrap tree from an rcRF object for efficacy scores.}
+\title{Efficacy importance via oob permutation}
 \usage{
 send.down.VI.ITR.Efficacy(dat.new, tre, col.y, col.r, col.trt, col.prtx,
   risk.threshold, lambda, ctg = NULL, n0 = n0, N0 = N0, revise.tree = T,
@@ -11,13 +11,17 @@ send.down.VI.ITR.Efficacy(dat.new, tre, col.y, col.r, col.trt, col.prtx,
 \arguments{
 \item{dat.new}{the new data set being sent down the tree. Required input.}
 
-\item{tre}{constructed tree.}
+\item{tre}{tree from rcDT function.}
 
-\item{col.y}{the response variable. Required input.}
+\item{col.y}{the efficacy variable. Required input.}
+
+\item{col.r}{the risk variable. Required input.}
 
 \item{col.trt}{the treatment indicator.  Must be binary. Required input.}
 
 \item{col.prtx}{the probability of being assigned to treatment group. Required input.}
+
+\item{lambda}{numeric value for risk penalty.}
 
 \item{ctg}{identifies the categorical input columns.  Defaults to NA.  Not available yet.}
 
@@ -32,11 +36,13 @@ send.down.VI.ITR.Efficacy(dat.new, tre, col.y, col.r, col.trt, col.prtx,
 \item{AIPWE}{indicator for AIPWE estimation.}
 }
 \value{
+List of importance items
+
 \item{tre0}{input tree with score from original tree and score from permutation from each variable used in the tree}
 
 \item{score}{score from the permuted data}
 }
 \description{
-Sends dat.new down a tree inside a random forest. 
+Sends dat.new down an rcDT structure inside an rcRF
 Calcuates value and permuted value for variable importance measures
 }

@@ -4,11 +4,11 @@
 \alias{Variable.Importance.ITR}
 \title{Calcuates variable importance measures for an rcRF object.}
 \usage{
-Variable.Importance.ITR(RF.fit, n0 = 5, N0 = 20, sort = TRUE,
+Variable.Importance.ITR(rcRF.fit, n0 = 5, N0 = 20, sort = TRUE,
   details = FALSE, depth = 1, AIPWE = FALSE)
 }
 \arguments{
-\item{RF.fit}{forest object from rcRF(). Required input.}
+\item{rcRF.fit}{rcRF object from rcRF(). Required input.}
 
 \item{n0}{minimum number of treatment/control observations needed in a split to call a node terminal. Defaults to 2.}
 
@@ -35,10 +35,12 @@ returns the variables in order of importance along with the importance measure, 
 }
 \examples{
 set.seed(123)
-dat <- generateData(n = 1000)
+dat <- generateData()
 # Build a forest with 100 trees
-fit <- rcRF(dat = dat, split.var = 1:10, ntree = 200,
-            risk.control = TRUE, risk.threshold = 2.75, 
+fit <- rcRF(data = dat, 
+            split.var = 1:10, 
+            ntree = 200,
+            risk.threshold = 2.75, 
             lambda = 1)
 VI <- Variable.Importance.ITR(fit)
 }

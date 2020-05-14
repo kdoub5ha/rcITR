@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcDT.select.R
 \name{rcDT.select}
 \alias{rcDT.select}
-\title{Cross Validation for Optimal rcDT Model Selection}
+\title{Optimal rcDT model selection}
 \usage{
 rcDT.select(data, split.var, N0 = 20, n0 = 5, efficacy = "y",
   risk = "r", col.trt = "trt", col.prtx = "prtx", lambda.seq = NA,
@@ -10,7 +10,7 @@ rcDT.select(data, split.var, N0 = 20, n0 = 5, efficacy = "y",
   nfolds = 10, AIPWE = FALSE, sort = TRUE, ctg = NA,
   mtry = length(split.var), max.depth = 15, stabilize.type = c("linear",
   "rf"), stabilize = TRUE, use.other.nodes = TRUE, use.bootstrap = FALSE,
-  extremeRandomized = FALSE)
+  extremeRandomized = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{data}{data.frame. Data used to construct rcDT model.
@@ -18,7 +18,7 @@ Must contain efficacy variable (y),
 risk variable (r), 
 binary treatment indicator coded as 0 / 1 (trt), 
 propensity score (prtx),
-candidate splitting covariates.}
+candidate splitting covariates (split.var).}
 
 \item{split.var}{numeric vector. Columns of spliting variables.}
 
@@ -34,7 +34,11 @@ candidate splitting covariates.}
 
 \item{col.prtx}{char. Propensity score column name.}
 
-\item{lambda.seq}{numeric vector. Identifies sequence of penalty parameters to be considered. Defaults to NA and will attempt to identify reasonable range.}
+\item{lambda.seq}{numeric vector. Identifies sequence of risk penalty parameters to be considered. 
+Defaults to NA and will attempt to identify reasonable range.}
+
+\item{lambda.length}{numeric indicating number of risk penalty parameters to use in tuning. 
+Larger values will cause model selection to be slower. Defaults to 50.}
 
 \item{risk.control}{logical. Should risk be controlled? Defaults to TRUE.}
 
@@ -58,11 +62,17 @@ candidate splitting covariates.}
 
 \item{use.bootstrap}{logical. Should a bootstrap resampling be done? Defaults to FALSE.}
 
-\item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril. #' @return A summary of the cross validation including optimal penalty parameter and the optimal model.}
+\item{extremeRandomized}{logical. Experimental for randomly selecting cutpoints in a random forest model. Defaults to FALSE and users should change this at their own peril.}
+
+\item{verbose}{logical. Should tuning progress bar be displayed. Defaults to TRUE.}
+
+\item{n.folds}{numeric. Number of folds to use in k-fold cross validation. Defaults to 10.}
 
 \item{test}{data.frame of testing observations. Should be formatted the same as 'data'.}
 }
 \value{
+A summary of the cross validation including optimal penalty parameter and the optimal model.
+
 \item{best.tree}{optimal rcDT model}
 
 \item{alpha}{tree size penalty}
@@ -80,18 +90,21 @@ candidate splitting covariates.}
 \item{in.train}{training samples from splits}
 
 \item{in.test}{testing samples from splits}
+
+\item{elapsed.time}{time elapsed during model tuning}
 }
 \description{
-Performs k-fold cross validation for rcDT model to 
-select the best subtree from the set of optimally pruned subtree generated from 
-`prune` function.
+Performs k-fold cross validation for tuning of risk and tree size 
+paramters to select the optimal rcDT model.
 }
 \examples{
 
 # Grow large tree
-set.seed(1)
+set.seed(123)
 dat <- generateData()
-fit <- rcDT.select(dat, split.var = 1:10, nfolds = 5, lambda = 1,
-                   risk.control = TRUE, risk.threshold = 2.75)
+fit <- rcDT.select(data = dat, 
+                   split.var = 1:10, 
+                   nfolds = 5,
+                   risk.threshold = 2.75)
 
 }

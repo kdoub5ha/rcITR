@@ -2,15 +2,15 @@ Package: rcITR
 Type: Package
 Title: Risk Controlled ITR Discovery
 Version: 1.0
-Date: 2020-04-06
+Date: 2020-05-13
 Author: Kevin Doubleday
 Maintainer: Kevin Doubleday <kdoub5ha@gmail.com>
 Description: Tool for risk controlled ITR discovery
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.2)
 LinkingTo: Rcpp, RcppArmadillo
-Suggests: 
-    knitr,
-    rmarkdown
+Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
+NeedsCompilation: yes
+Packaged: 2020-05-14 05:15:57 UTC; Elite-Intel
