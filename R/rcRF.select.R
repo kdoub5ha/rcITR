@@ -137,8 +137,9 @@ rcRF.select <- function(data,
 
   while(((risks[length(risks)] > risk.tolerance[2]*risk.threshold) | 
          (risks[length(risks)] < risk.tolerance[1]*risk.threshold))& 
-        iter < max.iter + 1){
-  
+        iter < max.iter + 1 & 
+        lambdas[length(lambdas)] > 0){
+
     fit.lam <- rcRF(data = data, 
                     split.var = split.var, 
                     efficacy = efficacy, 
