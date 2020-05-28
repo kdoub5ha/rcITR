@@ -109,7 +109,7 @@ rcDT.select <- function(data,
   }
 
   # retrieve lambda information (if provided)
-  if(is.na(lambda.seq)){
+  if(length(lambda.seq) < 2 & all(is.na(lambda.seq))){
     # define range of risk penalty values
     EY.0 <- mean(data[data$trt == 0,efficacy] - mean(data[,efficacy])) 
     EY.1 <- mean(data[data$trt == 1,efficacy] - mean(data[,efficacy])) 
@@ -232,8 +232,15 @@ rcDT.select <- function(data,
     
     best.alpha <- alphas[which.max(apply(do.call(rbind, lapply(pruned.trees.alpha, "[[", "V.test")), 2, mean, na.rm = TRUE))]
     best.tree.idx <- which.max(as.numeric(full.tre.prune$result$V) - best.alpha * as.numeric(full.tre.prune$result$size.tmnl))
-    best.tree <- full.tre.prune$subtrees[[best.tree.idx]]
-    
+
+    if(best.tree.idx > length(full.tre.prune$subtrees)){
+      best.tree <- full.tre.prune$subtrees[[length(full.tre.prune$subtrees)]]
+      best.tree[1, 6:ncol(best.tree)] <- NA
+      best.tree <- best.tree[1,,drop = FALSE]
+    } else{
+      best.tree <- full.tre.prune$subtrees[[best.tree.idx]]
+    }
+
     best.tree.summary <- apply(do.call(rbind, lapply(1:nfolds, function(n){
       pruned <- pruned.trees.alpha[[n]]$pruned
       best.subtre.idx <- which.max(as.numeric(pruned$result$V) - best.alpha * as.numeric(pruned$result$size.tmnl))
