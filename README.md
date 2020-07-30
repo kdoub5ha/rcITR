@@ -5,7 +5,7 @@
 - rcDT (Risk-Controlled Decision Tree): Single decision tree model
 - rcRF (Risk-Controlled Random Forest): Ensemble of rcDT models 
 
-Detailed documentation can be found <a href = "https://kdoub5ha.github.io/rcITR/rcITR-vignette" target="_blank">here</a>
+Detailed documentation can be found <a href="https://kdoub5ha.github.io/rcITR/rcITR-vignette" target="_blank">here</a>
 
 # Installation
 ```{r, echo = TRUE, eval = FALSE, warning = FALSE, error = FALSE, message = FALSE}
